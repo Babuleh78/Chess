@@ -6,11 +6,7 @@ import "./board.css";
 export default function Board() {
   const [board] = useState(
     Array(8).fill(null).map((_, row) => 
-      Array(8).fill(null).map((_, col) => ({
-        row,
-        col,
-        color: (row + col) % 2 === 0 ? "white" : "black"
-      }))
+      Array(8).fill(null).map((_, col) => ({row,col,  color: (row + col) % 2 === 0 ? "white" : "black"}))
     )
   );
 
@@ -20,15 +16,14 @@ export default function Board() {
   const [currentPlayer, setCurrentPlayer] = useState("white");
 
   const handleCellClick = (row, col) => {
-    // Если клетка уже выбрана - снимаем выбор
-    if (selectedCell && selectedCell.row === row && selectedCell.col === col) {
+    
+    if (selectedCell && selectedCell.row === row && selectedCell.col === col) { // Клетка уже выбрана
       setSelectedCell(null);
       setPossibleMoves([]);
       return;
     }
 
-    // Если фигура уже выбрана и клик на возможный ход - перемещаем
-    if (selectedCell && possibleMoves.some(move => move.row === row && move.col === col)) {
+    if (selectedCell && possibleMoves.some(move => move.row === row && move.col === col)) { // Фигура выбрана и есть возможный ход, двигаем
       const newPieces = [...pieces.map(row => [...row])];
       newPieces[row][col] = newPieces[selectedCell.row][selectedCell.col];
       newPieces[selectedCell.row][selectedCell.col] = null;
@@ -39,7 +34,6 @@ export default function Board() {
       return;
     }
 
-    // Если на клетке есть фигура текущего игрока - выбираем ее
     const piece = pieces[row][col];
     if (piece && piece.color === currentPlayer) {
       setSelectedCell({ row, col });
@@ -49,26 +43,22 @@ export default function Board() {
 
   const calculatePossibleMoves = (row, col, piece) => {
     const moves = [];
-    
-    // Простая реализация только для пешек (для демонстрации)
+    const direction = piece.color === "white" ? -1 : 1; // Белые вверх, черные вниз ( по хорошему потом добавить переворот доски)
+
     if (piece.type === "pawn") {
-      const direction = piece.color === "white" ? -1 : 1;
       
-      // Ход на одну клетку вперед
-      if (row + direction >= 0 && row + direction < 8 && !pieces[row + direction][col]) {
+      if (row + direction >= 0 && row + direction < 8 && !pieces[row + direction][col]) { // Можем двинуться вперед на 1
         moves.push({ row: row + direction, col });
         
-        // Первый ход на две клетки
-        if ((piece.color === "white" && row === 6) || (piece.color === "black" && row === 1)) {
+        if ((piece.color === "white" && row === 6) || (piece.color === "black" && row === 1)) { // Первый ход на две клетки
           if (!pieces[row + 2 * direction][col]) {
             moves.push({ row: row + 2 * direction, col });
           }
         }
       }
       
-      // Взятие фигур по диагонали
-      for (const dc of [-1, 1]) {
-        const newCol = col + dc;
+      for (const columns of [-1, 1]) { // Диагональ
+        const newCol = col + columns;
         if (newCol >= 0 && newCol < 8) {
           const targetPiece = pieces[row + direction][newCol];
           if (targetPiece && targetPiece.color !== piece.color) {
@@ -76,6 +66,51 @@ export default function Board() {
           }
         }
       }
+    }
+
+    if (piece.type === "rook") {
+    // Движение по вертикали вверх и вниз
+      for (let dir of [-1, 1]) { //-1 - вниз, 1 - вверх
+        for (let i = 1; i<8;i++) {
+          const newRow = row+i * dir
+          if(newRow<0 || newRow>=8) break
+
+          if(!pieces[newRow][col]){
+            moves.push({row: newRow, col})
+          } 
+          else{
+
+              if(pieces[newRow][col].color !== piece.color){
+                moves.push({row: newRow, col})
+              }
+              break
+            
+          }
+        }
+      }
+    
+    // Движение по горизонтали вправо влево
+    for (let dir of [-1, 1]) { //-1 - влево, 1 - вправо
+      for( let i = 1; i < 8; i++ ){
+        const newCol = col + i * dir
+
+        if(newCol<0 || newCol>=8) break
+
+        if(!pieces[row][newCol]){
+          moves.push({row, col: newCol})
+        } else{
+          if(pieces[row][newCol].color !== piece.color){
+            moves.push({row, col: newCol})
+          }
+
+          break;
+        }
+
+
+      }
+
+    }
+
     }
     
     setPossibleMoves(moves);
