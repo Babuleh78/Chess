@@ -1,12 +1,17 @@
 import React from 'react';
 import "./mainMenu.css"
 import MenuButton from '../../ui/MenuButton/menuButton';
-export default function MainMenu({onSoundToggle, onThemeChange}){
+export default function MainMenu({onSinglePlayer, onSoundToggle, onThemeChange}){
+
+ 
+    
     return (
     <div className="menu-container">
         <div className='main-menu'>
             <div className="main-buttons">
-                <MenuButton text="На одном компьютере" onClick={() => console.log('Single player')} />
+                <MenuButton text="На одном компьютере" 
+                onClick={onSinglePlayer}
+                 />
                 <MenuButton text="Шахматные задачи" onClick={() => console.log('Chess puzzles')} />
                 <MenuButton text="Мультиплеер" onClick={() => console.log('Multiplayer')} />
             </div>
