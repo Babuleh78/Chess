@@ -1,0 +1,67 @@
+.menu-button-container {
+  position: relative;
+  width: 350px; 
+  height: 80px; 
+  margin: 20px;
+  perspective: 1000px;
+}
+
+.menu-button-3d {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 2.5s;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.menu-button-container:hover .menu-button-3d {
+  transform: rotateX(360deg);
+}
+
+.menu-button-face {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: sans-serif;
+  text-transform: uppercase;
+  font-size: 22px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  border: 2px solid #000;
+  box-sizing: border-box;
+  backface-visibility: hidden;
+}
+
+.menu-button-container:hover .menu-button-face {
+  color: #fff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.menu-button-face:nth-child(1) {
+  transform: rotateX(0deg) translateZ(40px);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.menu-button-face:nth-child(2) {
+  transform: rotateX(90deg) translateZ(40px);
+}
+
+.menu-button-face:nth-child(3) {
+  transform: rotateX(180deg) translateZ(40px);
+}
+
+.menu-button-face:nth-child(4) {
+  transform: rotateX(270deg) translateZ(40px);
+}

@@ -36,3 +36,23 @@
     transform: rotate(360deg);
   }
 }
+
+.app {
+  height: 100vh;
+}
+
+.light-theme {
+  --bg-color: #f5f7fa;
+  --text-color: #333;
+}
+
+.dark-theme {
+  --bg-color: #1a1a2e;
+  --text-color: #f5f7fa;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: all 0.3s ease;
+}
