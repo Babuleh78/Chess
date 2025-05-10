@@ -84,44 +84,189 @@ export default function Board() {
                 moves.push({row: newRow, col})
               }
               break
-            
+              
+            }
           }
         }
-      }
     
-    // Движение по горизонтали вправо влево
-    for (let dir of [-1, 1]) { //-1 - влево, 1 - вправо
-      for( let i = 1; i < 8; i++ ){
-        const newCol = col + i * dir
+      // Движение по горизонтали вправо влево
+      for (let dir of [-1, 1]) { //-1 - влево, 1 - вправо
+        for( let i = 1; i < 8; i++ ){
+          const newCol = col + i * dir
 
-        if(newCol<0 || newCol>=8) break
+          if(newCol<0 || newCol>=8) break
 
-        if(!pieces[row][newCol]){
-          moves.push({row, col: newCol})
-        } else{
-          if(pieces[row][newCol].color !== piece.color){
+          if(!pieces[row][newCol]){
             moves.push({row, col: newCol})
-          }
+          } else{
+            if(pieces[row][newCol].color !== piece.color){
+              moves.push({row, col: newCol})
+            }
 
-          break;
+            break;
+          }
         }
 
+      }
+    }
+
+    if(piece.type === "bishop"){
+
+      const directions = [
+        { drow: -1, dcol: -1 }, // вверх-влево
+        { drow: -1, dcol: 1 },  // вверх-вправо
+        { drow: 1, dcol: -1 },  // вниз-влево
+        { drow: 1, dcol: 1 }    // вниз-вправо
+    ];
+
+      for(const {drow, dcol} of directions){
+        for(let i = 1; i < 8; i++) {
+            const newRow = row + i * drow;
+            const newCol = col + i * dcol;
+            
+            if(newRow < 0 || newRow >= 8 || newCol < 0 || newCol >= 8) break;
+            console.log(newRow, newCol)
+            if(!pieces[newRow][newCol]) {
+                moves.push({row: newRow, col: newCol});
+            } else {
+                if(pieces[newRow][newCol].color !== piece.color) {
+                    moves.push({row: newRow, col: newCol}); 
+                }
+                break; 
+            }
+        }
+      }
+    }
+
+    if(piece.type === "knight"){
+
+      const knightMoves = [
+        {drow: -2, dcol: 1}, {drow: -2, dcol: -1},
+        {drow: 2, dcol: 1}, {drow: 2, dcol: -1},
+        {drow: 1, dcol: 2}, {drow: 1, dcol: -2},
+        {drow: -1, dcol: 2}, {drow: -1, dcol: -2}
+      ]
+
+      for(const {drow, dcol} of knightMoves){
+          const newRow = row +  drow
+          const newCol = col + dcol
+
+          if( newRow < 0 || newCol < 0 || newRow >=8 || newCol >=8) continue
+
+          if(!pieces[newRow][newCol]){
+            moves.push({row: newRow, col: newCol})
+          } else{
+
+            if(pieces[newRow][newCol].color !== piece.color){
+              moves.push({row: newRow, col: newCol})
+            }
+          }
 
       }
-
-    }
-
     }
     
+    if(piece.type === "queen"){
+      const directions = [
+        { drow: -1, dcol: -1 }, // вверх-влево
+        { drow: -1, dcol: 1 },  // вверх-вправо
+        { drow: 1, dcol: -1 },  // вниз-влево
+        { drow: 1, dcol: 1 }    // вниз-вправо
+    ];
+
+      for(const {drow, dcol} of directions){
+        for(let i = 1; i < 8; i++) {
+            const newRow = row + i * drow;
+            const newCol = col + i * dcol;
+            
+            if(newRow < 0 || newRow >= 8 || newCol < 0 || newCol >= 8) break;
+            console.log(newRow, newCol)
+            if(!pieces[newRow][newCol]) {
+                moves.push({row: newRow, col: newCol});
+            } else {
+                if(pieces[newRow][newCol].color !== piece.color) {
+                    moves.push({row: newRow, col: newCol}); 
+                }
+                break; 
+            }
+        }
+      }
+
+      for (let dir of [-1, 1]) { //-1 - вниз, 1 - вверх
+        for (let i = 1; i<8;i++) {
+          const newRow = row+i * dir
+          if(newRow<0 || newRow>=8) break
+
+          if(!pieces[newRow][col]){
+            moves.push({row: newRow, col})
+          } 
+          else{
+
+              if(pieces[newRow][col].color !== piece.color){
+                moves.push({row: newRow, col})
+              }
+              break
+              
+            }
+          }
+        }
+    
+      // Движение по горизонтали вправо влево
+      for (let dir of [-1, 1]) { //-1 - влево, 1 - вправо
+        for( let i = 1; i < 8; i++ ){
+          const newCol = col + i * dir
+
+          if(newCol<0 || newCol>=8) break
+
+          if(!pieces[row][newCol]){
+            moves.push({row, col: newCol})
+          } else{
+            if(pieces[row][newCol].color !== piece.color){
+              moves.push({row, col: newCol})
+            }
+
+            break;
+          }
+        }
+
+      }
+    }
+
+    if (piece.type === "king") {
+    const kingMoves = [
+        { dr: -1, dc: 0 },  
+        { dr: 1, dc: 0 },  
+        { dr: 0, dc: -1 },   
+        { dr: 0, dc: 1 },    
+        { dr: -1, dc: -1 },  
+        { dr: -1, dc: 1 },   
+        { dr: 1, dc: -1 },  
+        { dr: 1, dc: 1 }    
+    ];
+
+    for (const { dr, dc } of kingMoves) {
+        const newRow = row + dr;
+        const newCol = col + dc;
+        if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+           
+            if (!pieces[newRow][newCol]) {
+                moves.push({ row: newRow, col: newCol });
+            }
+        }
+    }
+  
+}
+
     setPossibleMoves(moves);
   };
 
-  return (
+    return (
     <div className="board-container">
       <div className="current-player">Current player: {currentPlayer}</div>
-      <div className="board">
+      <div className="board" style={{ transform: currentPlayer === 'black' ? 'rotate(180deg)' : 'none' }}>
         {board.map((row, rowIndex) => (
-          <div key={rowIndex} className="board-row">
+          <div key={rowIndex} className="board-row" style={{ 
+            transform: currentPlayer === 'black' ? 'rotate(180deg)' : 'none'
+          }}>
             {row.map((cell, colIndex) => (
               <Cell
                 key={`${rowIndex}-${colIndex}`}
@@ -130,12 +275,13 @@ export default function Board() {
                 isSelected={selectedCell && selectedCell.row === rowIndex && selectedCell.col === colIndex}
                 isPossibleMove={possibleMoves.some(move => move.row === rowIndex && move.col === colIndex)}
                 onClick={() => handleCellClick(rowIndex, colIndex)}
-              />
-            ))}
-          </div>
-        ))}
+                isFlipped={currentPlayer === 'black'}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
   );
 }
 function initFigures (){
