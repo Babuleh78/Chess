@@ -13,7 +13,7 @@ export default function MainMenu({onSinglePlayer, onSoundToggle, onThemeChange})
                 onClick={onSinglePlayer}
                  />
                 <MenuButton text="Шахматные задачи" onClick={() => console.log('Chess puzzles')} />
-                <MenuButton text="Мультиплеер" onClick={() => console.log('Multiplayer')} />
+                <MenuButton text="Дебюты" onClick={() => console.log('Multiplayer')} />
             </div>
     
             <div className="footer-buttons">

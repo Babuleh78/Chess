@@ -56,3 +56,8 @@
 .board {
   transition: transform 1s ease-in-out;
 }
+
+
+.sell-in-check {
+  background-color: #bc0c0cce !important;
+}

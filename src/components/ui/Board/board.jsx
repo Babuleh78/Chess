@@ -14,6 +14,7 @@ export default function Board() {
   const [selectedCell, setSelectedCell] = useState(null);
   const [possibleMoves, setPossibleMoves] = useState([]);
   const [currentPlayer, setCurrentPlayer] = useState("white");
+  const [kingInCheck, setKingInCheck] = useState(null);
 
   const handleCellClick = (row, col) => {
     
@@ -24,14 +25,30 @@ export default function Board() {
     }
 
     if (selectedCell && possibleMoves.some(move => move.row === row && move.col === col)) { // Фигура выбрана и есть возможный ход, двигаем
+      
       const newPieces = [...pieces.map(row => [...row])];
       newPieces[row][col] = newPieces[selectedCell.row][selectedCell.col];
       newPieces[selectedCell.row][selectedCell.col] = null;
+      
+      // Проверяем, находится ли король под шахом после хода
+      const opponentColor = currentPlayer === "white" ? "black" : "white";
+      const kingPos = findKing(opponentColor, newPieces);
+      console.log(pieces[kingPos.row][kingPos.col])
+      const isCheck = isSquareUnderAttack(kingPos.row, kingPos.col, newPieces, currentPlayer);
+      
+      if (isCheck) {
+        setKingInCheck(isCheck ? kingPos : null);
+        
+      } else{
+        setKingInCheck(null);
+      }
+      
       setPieces(newPieces);
       setSelectedCell(null);
       setPossibleMoves([]);
-      setCurrentPlayer(currentPlayer === "white" ? "black" : "white");
+      setCurrentPlayer(opponentColor);
       return;
+  
     }
 
     const piece = pieces[row][col];
@@ -41,10 +58,37 @@ export default function Board() {
     }
   };
 
-  const calculatePossibleMoves = (row, col, piece) => {
-    const moves = [];
-    const direction = piece.color === "white" ? -1 : 1; // Белые вверх, черные вниз ( по хорошему потом добавить переворот доски)
 
+function isSquareUnderAttack(row, col, pieces, attackingColor) {
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const piece = pieces[r][c];
+      if (piece && piece.color === attackingColor) {
+        const moves = getPossibleMovesForPiece(r, c, piece, pieces);
+        if (moves.some(move => move.row === row && move.col === col)) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+
+const isMoveSafeForKing = (fromRow, fromCol, toRow, toCol, pieces, currentColor) => {
+
+  const tempPieces = pieces.map(row => [...row]);
+
+  tempPieces[toRow][toCol] = tempPieces[fromRow][fromCol];
+  tempPieces[fromRow][fromCol] = null;
+  
+  const kingPos = findKing(currentColor, tempPieces);
+  return !isSquareUnderAttack(kingPos.row, kingPos.col, tempPieces, currentColor === "white" ? "black" : "white");
+};
+
+function getPossibleMovesForPiece(row, col, piece, pieces) {
+  const moves = [];
+  const direction = piece.color === "white" ? -1 : 1;
     if (piece.type === "pawn") {
       
       if (row + direction >= 0 && row + direction < 8 && !pieces[row + direction][col]) { // Можем двинуться вперед на 1
@@ -125,7 +169,6 @@ export default function Board() {
             const newCol = col + i * dcol;
             
             if(newRow < 0 || newRow >= 8 || newCol < 0 || newCol >= 8) break;
-            console.log(newRow, newCol)
             if(!pieces[newRow][newCol]) {
                 moves.push({row: newRow, col: newCol});
             } else {
@@ -254,14 +297,40 @@ export default function Board() {
         }
     }
   
+  }
+
+   
+  
+  return moves;
 }
 
-    setPossibleMoves(moves);
+function findKing(color, pieces) {
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const piece = pieces[r][c]
+      if (piece && piece.type === "king" && piece.color === color) {
+        return { row: r, col: c }
+      }
+    }
+  }
+  throw new Error("Король не найден!")
+}
+
+
+
+
+function calculatePossibleMoves(row, col, piece) {
+    const moves = getPossibleMovesForPiece(row, col, piece, pieces);
+
+    const safeMoves = moves.filter(move => {
+        return isMoveSafeForKing(row, col, move.row, move.col, pieces, piece.color);
+    });
+    
+    setPossibleMoves(safeMoves);
   };
 
     return (
     <div className="board-container">
-      <div className="current-player">Current player: {currentPlayer}</div>
       <div className="board" style={{ transform: currentPlayer === 'black' ? 'rotate(180deg)' : 'none' }}>
         {board.map((row, rowIndex) => (
           <div key={rowIndex} className="board-row" style={{ 
@@ -274,6 +343,7 @@ export default function Board() {
                 piece={pieces[rowIndex][colIndex]}
                 isSelected={selectedCell && selectedCell.row === rowIndex && selectedCell.col === colIndex}
                 isPossibleMove={possibleMoves.some(move => move.row === rowIndex && move.col === colIndex)}
+                isInCheck={kingInCheck && kingInCheck.row === rowIndex && kingInCheck.col === colIndex}
                 onClick={() => handleCellClick(rowIndex, colIndex)}
                 isFlipped={currentPlayer === 'black'}
                 />
@@ -314,4 +384,3 @@ function initFigures (){
   return cells
 
 }
-

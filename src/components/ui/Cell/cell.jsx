@@ -1,12 +1,12 @@
 import React from "react";
 import "./cell.css";
 
-export default function Cell({ cell, onClick, isSelected, isPossibleMove, piece }) {
+export default function Cell({ cell, onClick, isSelected, isPossibleMove, isInCheck, piece }) {
   
   let cellClass = `cell ${cell.color}`;
   if (isSelected) cellClass += " selected";
   if (isPossibleMove) cellClass += ` possible-move-${cell.color}`;
-  
+  if (isInCheck) cellClass += " sell-in-check"
   return (
     <div className={cellClass} onClick={onClick}>
       {piece && (
