@@ -24,6 +24,8 @@ export default function Board() {
   const [gameOver, setGameOver] = useState(false); // Идет ли игра
   const [gameResult, setGameResult] = useState(null); // Белый черный или ничья
   const [promotingPawn, setPromotingPawn] = useState(null); // Отслеживаем пешку
+  const [capturedPieces, setCapturedPieces] = useState({ white: [], black: [] }); // "Убитые" фигуры
+  const [materialAdvantage, setMaterialAdvantage] = useState(0); // Подсчет преимущества
 
 const handleResign = () => {
   if (gameOver) return;
@@ -33,27 +35,27 @@ const handleResign = () => {
 };
 
   useEffect(() => {
-  let interval;
-  if (timerActive && !gameOver) {
-    interval = setInterval(() => {
-      currentPlayer === 'white' 
-        ? setWhiteTime(prev => prev > 0 ? prev - 1 : 0)
-        : setBlackTime(prev => prev > 0 ? prev - 1 : 0);
-    }, 1000);
-  }
-  
-  if (whiteTime === 0) {
-    setGameOver(true);
-    setGameResult('black');
-    setTimerActive(false);
-  } else if (blackTime === 0) {
-    setGameOver(true);
-    setGameResult('white');
-    setTimerActive(false);
-  }
+    let interval;
+    if (timerActive && !gameOver) {
+      interval = setInterval(() => {
+        currentPlayer === 'white' 
+          ? setWhiteTime(prev => prev > 0 ? prev - 1 : 0)
+          : setBlackTime(prev => prev > 0 ? prev - 1 : 0);
+      }, 1000);
+    }
+    
+    if (whiteTime === 0) {
+      setGameOver(true);
+      setGameResult('black');
+      setTimerActive(false);
+    } else if (blackTime === 0) {
+      setGameOver(true);
+      setGameResult('white');
+      setTimerActive(false);
+    }
 
-    return () => clearInterval(interval);
-  }, [currentPlayer, timerActive, gameOver, whiteTime, blackTime]);
+      return () => clearInterval(interval);
+    }, [currentPlayer, timerActive, gameOver, whiteTime, blackTime]);
 
 function formatTime(seconds){
     const mins = Math.floor(seconds / 60);
@@ -62,73 +64,98 @@ function formatTime(seconds){
   };
 
   const handleCellClick = (row, col) => {
-  if (selectedCell && selectedCell.row === row && selectedCell.col === col) {
-    setSelectedCell(null);
-    setPossibleMoves([]);
-    return;
-  }
+    if (selectedCell && selectedCell.row === row && selectedCell.col === col) {
+      setSelectedCell(null);
+      setPossibleMoves([]);
+      return;
+    }
 
-  if (selectedCell && possibleMoves.some(move => move.row === row && move.col === col)) {
-    const newPieces = [...pieces.map(row => [...row])];
-    const piece = newPieces[selectedCell.row][selectedCell.col];
-    const move = possibleMoves.find(m => m.row === row && m.col === col);
+    if (selectedCell && possibleMoves.some(move => move.row === row && move.col === col)) {
+      const newPieces = [...pieces.map(row => [...row])];
+      const piece = newPieces[selectedCell.row][selectedCell.col];
+      const move = possibleMoves.find(m => m.row === row && m.col === col);
 
-    // Обработка рокировки
-    if (move && move.isCastling) {
-      // Перемещаем короля
-      newPieces[row][col] = { ...piece, hasMoved: true };
-      newPieces[selectedCell.row][selectedCell.col] = null;
-      
-      // Перемещаем ладью
-      const rook = newPieces[row][move.rookCol];
-      newPieces[row][move.newRookCol] = { ...rook, hasMoved: true };
-      newPieces[row][move.rookCol] = null;
-    } 
-    // Обычный ход
-    else {
-      newPieces[row][col] = { ...piece, hasMoved: true };
-      newPieces[selectedCell.row][selectedCell.col] = null;
-      
-      // Проверка на достижение пешкой последней горизонтали
-      if (piece.type === "pawn" && (row === 0 || row === 7)) {
-        setPromotingPawn({row, col, color: piece.color});
-        setPieces(newPieces);
-        setSelectedCell(null);
-        setPossibleMoves([]);
-        return;
+      if (newPieces[row][col]) { 
+        const capturedPiece = newPieces[row][col];
+        setCapturedPieces(prev => {
+            const newCaptured = {
+                ...prev,
+                [currentPlayer]: [...prev[currentPlayer], capturedPiece]
+            };
+            // Сразу рассчитываем на основе newCaptured
+            const pieceValues = {
+                pawn: 1, knight: 3, bishop: 3, 
+                rook: 5, queen: 9, king: 0
+            };
+            const whiteLost = newCaptured.white.reduce((s, p) => s + pieceValues[p.type], 0);
+            const blackLost = newCaptured.black.reduce((s, p) => s + pieceValues[p.type], 0);
+            setMaterialAdvantage(-blackLost + whiteLost);
+            return newCaptured;
+        });
+    }
+
+      // Обработка рокировки
+      if (move && move.isCastling) {
+        // Перемещаем короля
+        newPieces[row][col] = { ...piece, hasMoved: true };
+        newPieces[selectedCell.row][selectedCell.col] = null;
+        
+        // Перемещаем ладью
+        const rook = newPieces[row][move.rookCol];
+        newPieces[row][move.newRookCol] = { ...rook, hasMoved: true };
+        newPieces[row][move.rookCol] = null;
+      } 
+      // Обычный ход
+      else {
+        newPieces[row][col] = { ...piece, hasMoved: true };
+        newPieces[selectedCell.row][selectedCell.col] = null;
+        
+        // Проверка на достижение пешкой последней горизонтали
+        if (piece.type === "pawn" && (row === 0 || row === 7)) {
+          setPromotingPawn({row, col, color: piece.color});
+          setPieces(newPieces);
+          setSelectedCell(null);
+          setPossibleMoves([]);
+          return;
+        }
+
+  
       }
+
+      
+
+      const opponentColor = currentPlayer === "white" ? "black" : "white";
+      const kingPos = findKing(opponentColor, newPieces);
+      const isCheck = isSquareUnderAttack(kingPos.row, kingPos.col, newPieces, currentPlayer);
+      
+      if (isCheck) {
+        setKingInCheck(isCheck ? kingPos : null);
+      } else {
+        setKingInCheck(null);
+      }
+      
+      const isCheckmate = checkForCheckmate(opponentColor, newPieces);
+      if (isCheckmate) {
+        setGameOver(true);
+        setGameResult(currentPlayer);
+        setTimerActive(false);
+      }
+
+      setPieces(newPieces);
+      setSelectedCell(null);
+      setPossibleMoves([]);
+      setCurrentPlayer(opponentColor);
+      return;
     }
 
-    const opponentColor = currentPlayer === "white" ? "black" : "white";
-    const kingPos = findKing(opponentColor, newPieces);
-    const isCheck = isSquareUnderAttack(kingPos.row, kingPos.col, newPieces, currentPlayer);
-    
-    if (isCheck) {
-      setKingInCheck(isCheck ? kingPos : null);
-    } else {
-      setKingInCheck(null);
+    const piece = pieces[row][col];
+    if (piece && piece.color === currentPlayer) {
+      setSelectedCell({ row, col });
+      calculatePossibleMoves(row, col, piece);
+      
     }
-    
-    const isCheckmate = checkForCheckmate(opponentColor, newPieces);
-    if (isCheckmate) {
-      setGameOver(true);
-      setGameResult(currentPlayer);
-      setTimerActive(false);
-    }
-
-    setPieces(newPieces);
-    setSelectedCell(null);
-    setPossibleMoves([]);
-    setCurrentPlayer(opponentColor);
-    return;
-  }
-
-  const piece = pieces[row][col];
-  if (piece && piece.color === currentPlayer) {
-    setSelectedCell({ row, col });
-    calculatePossibleMoves(row, col, piece);
-  }
 };
+
 
 const handlePromotionChoice = (pieceType) => {
   if (!promotingPawn) return;
@@ -181,7 +208,7 @@ function isSquareUnderAttack(row, col, pieces, attackingColor) {
 function checkForCheckmate(color, pieces) {
   const kingPos = findKing(color, pieces);
   if (!isSquareUnderAttack(kingPos.row, kingPos.col, pieces, color === 'white' ? 'black' : 'white')) {
-    return false; // Нет шаха - нет мата
+    return false; 
   }
 
   // Проверяем, есть ли хотя бы один допустимый ход для любой фигуры этого цвета
@@ -487,9 +514,10 @@ function calculatePossibleMoves(row, col, piece) {
   };
 
     
-    return (
+return (
   <div className="board-container">
-    <div className="timers">
+    <div className="left-panel">
+      <div className="timers">
         <div className={`timer ${currentPlayer === 'black' ? 'active' : ''} ${whiteTime === 0 ? 'timeout' : ''}`}>
           <div className="player-name">Белые</div>
           <div className="time">{formatTime(whiteTime)}</div>
@@ -499,7 +527,26 @@ function calculatePossibleMoves(row, col, piece) {
           <div className="time">{formatTime(blackTime)}</div>
         </div>
       </div>
-      {gameOver && (
+
+      <div className="controls">
+        <button 
+          onClick={() => setRotateBoard(!rotateBoard)}
+          className="rotate-button"
+        >
+          <b>{rotateBoard ? "Отключить поворот" : "Включить поворот"}</b>
+        </button>
+        {!gameOver && (
+          <button 
+            onClick={handleResign}
+            className="resign-button"
+          >
+            <b>Сдаться</b>
+          </button>
+        )}
+    </div>
+  </div>
+
+  {gameOver && (
   <div className="game-over-modal">
     <div className="game-over-content">
       <h2>Игра окончена!</h2>
@@ -526,9 +573,6 @@ function calculatePossibleMoves(row, col, piece) {
         </div>
       </div>
     )}
-
-
-
 
     <div className="board" style={{ transform: rotateBoard && currentPlayer === 'black' ? 'rotate(180deg)' : 'none' }}>
       {board.map((row, rowIndex) => (
@@ -557,21 +601,50 @@ function calculatePossibleMoves(row, col, piece) {
       ))}
     </div>
     
-      <div className="controls">
-        <button 
-          onClick={() => setRotateBoard(!rotateBoard)}
-          className="rotate-button"
-        >
-          <b>{rotateBoard ? "Отключить поворот" : "Включить поворот"}</b>
-        </button>
-        {!gameOver && (
-          <button 
-            onClick={handleResign}
-            className="resign-button"
-          >
-            <b>Сдаться</b>
-          </button>
-        )}
+      <div className="right-panel">
+      <div className="captured-pieces">
+        <h3>Съеденные фигуры</h3>
+        <div className="pieces-list white-captured">
+          <h4>Белые взяли:</h4>
+          {capturedPieces.white.map((piece, index) => (
+            <div key={index} className={`captured-piece ${piece.color}`}>
+              <Cell 
+                cell={{color: 'white'}} 
+                piece={piece} 
+                small={true}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="pieces-list black-captured">
+          <h4>Чёрные взяли:</h4>
+          {capturedPieces.black.map((piece, index) => (
+            <div key={index} className={`captured-piece ${piece.color}`}>
+              <Cell 
+                cell={{color: 'black'}} 
+                piece={piece} 
+                small={true}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="material-advantage">
+        <h3>Материальное преимущество</h3>
+        <div className={`advantage ${materialAdvantage > 0 ? 'white' : materialAdvantage < 0 ? 'black' : 'equal'}`}>
+          {materialAdvantage > 0 
+            ? `+${materialAdvantage} (Белые)` 
+            : materialAdvantage < 0 
+              ? `${Math.abs(materialAdvantage)} (Чёрные)` 
+              : 'Равно'}
+        </div>
+      </div>
+    </div>
+
+
+
+
+    
         {promotingPawn && (
           <div className="promotion-modal">
             <div className="promotion-content">
@@ -587,6 +660,7 @@ function calculatePossibleMoves(row, col, piece) {
                       cell={{color: promotingPawn.color === 'white' ? 'white' : 'black'}}
                       piece={{type: pieceType, color: promotingPawn.color}}
                       isFlipped={rotateBoard && currentPlayer === 'black'}
+                    
                     />
                   </div>
                 ))}
@@ -595,7 +669,7 @@ function calculatePossibleMoves(row, col, piece) {
           </div>
         )}
     </div>
-    </div>
+
   );
 }
 
