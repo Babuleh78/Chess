@@ -263,6 +263,7 @@
 .captured-pieces {
   margin-bottom: 20px;
   
+  
 }
 
 .pieces-list {
@@ -270,6 +271,7 @@
   flex-wrap: wrap;
   gap: 5px;
   margin: 10px 0;
+  
 }
 
 .captured-piece {
@@ -278,6 +280,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  
 }
 
 .material-advantage {
@@ -305,8 +308,66 @@
 .small-cell {
   width: 30px;
   height: 30px;
+  margin-top: 30px;
 }
 
 .piece-image {
   transition: all 0.2s ease;
+}
+
+
+.menu-exit-container {
+  position: fixed;
+  
+  margin-top: 20px;
+  padding: 10px;
+  margin-top: 650px;
+}
+
+.exit-to-menu-button {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.exit-to-menu-button:hover {
+  background-color: #d32f2f;
+}
+
+.exit-to-menu-button .icon {
+  font-size: 16px;
+}
+
+/* board.css */
+.board-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1; 
+  background: linear-gradient(-45deg, #0ebc05, #dcedfe, #ce0fe7, #177f9f);
+  filter: brightness(60%);
+  background-size: 1000% 1000%;
+  animation: gradientBG 20s ease infinite;
+}
+
+@keyframes gradientBG {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }

@@ -1,14 +1,16 @@
-import React, { useEffect, useState } from "react";
-import "./solowindow.css"
-import Board from "../../ui/Board/board";
 
-export default function SoloWindow(){
+import Board from '../../ui/Board/board';
+import './solowindow.css';
 
-    
+export default function SoloWindow({ onBack }) {
+  
 
-    return(
-        <div className="solowindow"> 
-            <Board/>
-        </div>
-    )
+  return (
+    <div className="solo-window">
+      <Board 
+        onBack={onBack} 
+      />
+     
+    </div>
+  );
 }

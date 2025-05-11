@@ -2,45 +2,48 @@ import React, { useState } from 'react';
 import './App.css';
 import MainMenu from './components/layout/MainMenu/mainMenu';
 import SoloWindow from './components/layout/SoloWindow/solowindow';
+import ChessPuzzles from './components/layout/ChessPuzzle/chessPuzzle';
 
 export default function App() {
-  const [isSoundOn, setIsSoundOn] = useState(true);
-  const [theme, setTheme] = useState('light');
-  const [showMainMenu, setShowMainMenu] = useState(true);
-
-  const handleSoundToggle = () => {
-    setIsSoundOn(!isSoundOn);
-  };
-
-  const handleThemeChange = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-  };
-
+  const [currentView, setCurrentView] = useState('mainMenu'); 
 
   const handleSinglePlayer = () => {
-    setShowMainMenu(false); 
+    setCurrentView('game');
+  };
+
+  const handleChessPuzzles = () => {
+    setCurrentView('puzzles');
+  };
+
+  const handleOpenings = () => {
+    setCurrentView('openings');
   };
 
   const handleBackToMenu = () => {
-    setShowMainMenu(true); 
+    setCurrentView('mainMenu');
   };
 
-  
-    
   return (
-    <div className={`app ${theme}-theme`}>
-      {showMainMenu && (
+    <div>
+      {currentView === 'mainMenu' && (
         <MainMenu 
           onSinglePlayer={handleSinglePlayer}
-          onSoundToggle={handleSoundToggle}
-          onThemeChange={handleThemeChange}
+          onChessPuzzles={handleChessPuzzles}
+          onOpenings={handleOpenings}
         />
       )}
       
-      {!showMainMenu && (
+      {currentView === 'game' && (
         <SoloWindow onBack={handleBackToMenu} />
+      )}
+      
+      {currentView === 'puzzles' && (
+        <ChessPuzzles onBack={handleBackToMenu} />
+      )}
+      
+      {currentView === 'openings' && (
+        <div>Компонент дебютов (заглушка)</div>
       )}
     </div>
   );
-   
 }

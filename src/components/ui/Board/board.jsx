@@ -3,15 +3,20 @@ import { useState } from "react";
 import Cell from "../Cell/cell";
 import "./board.css";
 
-export default function Board() {
+export default function Board( {onBack}) {
   const [board] = useState(
     Array(8).fill(null).map((_, row) => 
       Array(8).fill(null).map((_, col) => ({row,col,  color: (row + col) % 2 === 0 ? "white" : "black"}))
     )
   );
 
+  const handleExitToMenu = () => {
+    if (window.confirm("Вы уверены, что хотите выйти в меню? Текущая игра будет потеряна.")) {
+      onBack();
+    }
+  };
   
-  const [pieces, setPieces] = useState(initFigures()); // Фигуры
+  const [pieces, setPieces] = useState([]);
   const [selectedCell, setSelectedCell] = useState(null); // Выбранная клетка
   const [possibleMoves, setPossibleMoves] = useState([]); // Возможные ходы
   const [currentPlayer, setCurrentPlayer] = useState("white"); // Текущий игрок
@@ -26,7 +31,8 @@ export default function Board() {
   const [promotingPawn, setPromotingPawn] = useState(null); // Отслеживаем пешку
   const [capturedPieces, setCapturedPieces] = useState({ white: [], black: [] }); // "Убитые" фигуры
   const [materialAdvantage, setMaterialAdvantage] = useState(0); // Подсчет преимущества
-
+  
+  
 const handleResign = () => {
   if (gameOver) return;
   setGameOver(true);
@@ -515,6 +521,8 @@ function calculatePossibleMoves(row, col, piece) {
 
     
 return (
+  <>
+  <div className="board-background"></div>
   <div className="board-container">
     <div className="left-panel">
       <div className="timers">
@@ -570,6 +578,8 @@ return (
           >
             Новая игра
           </button>
+
+          
         </div>
       </div>
     )}
@@ -607,7 +617,7 @@ return (
         <div className="pieces-list white-captured">
           <h4>Белые взяли:</h4>
           {capturedPieces.white.map((piece, index) => (
-            <div key={index} className={`captured-piece ${piece.color}`}>
+            <div key={index} className={`captured-piece `}>
               <Cell 
                 cell={{color: 'white'}} 
                 piece={piece} 
@@ -616,10 +626,14 @@ return (
             </div>
           ))}
         </div>
+        
+
+      
+
         <div className="pieces-list black-captured">
           <h4>Чёрные взяли:</h4>
           {capturedPieces.black.map((piece, index) => (
-            <div key={index} className={`captured-piece ${piece.color}`}>
+            <div key={index} className={`captured-piece `}>
               <Cell 
                 cell={{color: 'black'}} 
                 piece={piece} 
@@ -640,7 +654,6 @@ return (
         </div>
       </div>
     </div>
-
 
 
 
@@ -668,8 +681,21 @@ return (
             </div>
           </div>
         )}
-    </div>
 
+
+        <div className="menu-exit-container">
+          <button 
+            className="exit-to-menu-button"
+            onClick={handleExitToMenu}
+          >
+            <span className="icon">←</span> Выход в меню
+          </button>
+        </div>
+
+    </div>
+</>
+
+        
   );
 }
 
