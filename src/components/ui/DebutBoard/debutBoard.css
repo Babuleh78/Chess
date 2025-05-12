@@ -1,4 +1,3 @@
-/* Основные стили */
 .board-background {
   position: fixed;
   top: 0;
@@ -83,7 +82,6 @@
   margin: 10px 0;
 }
 
-/* Общие стили для кнопок */
 .nav-button, .move-button, .exit-button {
   padding: 12px 20px;
   border: none;

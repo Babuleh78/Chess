@@ -73,6 +73,7 @@ function formatTime(seconds){
 
   const handleCellClick = (row, col) => {
     if (selectedCell && selectedCell.row === row && selectedCell.col === col) {
+       console.log("1")
       setSelectedCell(null);
       setPossibleMoves([]);
       return;
@@ -84,6 +85,7 @@ function formatTime(seconds){
       const move = possibleMoves.find(m => m.row === row && m.col === col);
 
       if (newPieces[row][col]) { 
+        
         const capturedPiece = newPieces[row][col];
         setCapturedPieces(prev => {
             const newCaptured = {
@@ -215,6 +217,7 @@ function isSquareUnderAttack(row, col, pieces, attackingColor) {
 
 function checkForCheckmate(color, pieces) {
   const kingPos = findKing(color, pieces);
+ 
   if (!isSquareUnderAttack(kingPos.row, kingPos.col, pieces, color === 'white' ? 'black' : 'white')) {
     return false; 
   }
@@ -233,7 +236,6 @@ function checkForCheckmate(color, pieces) {
       }
     }
   }
-  
   return true; // Нет допустимых ходов - это мат
 }
 
@@ -497,6 +499,7 @@ function getPossibleMovesForPiece(row, col, piece, pieces) {
 }
 
 function findKing(color, pieces) {
+  
   for (let r = 0; r < 8; r++) {
     for (let c = 0; c < 8; c++) {
       const piece = pieces[r][c]
@@ -505,7 +508,8 @@ function findKing(color, pieces) {
       }
     }
   }
-  throw new Error("Король не найден!")
+  
+  Error.log("Король не найден!")
 }
 
 
