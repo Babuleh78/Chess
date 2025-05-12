@@ -3,7 +3,7 @@ import './App.css';
 import MainMenu from './components/layout/MainMenu/mainMenu';
 import SoloWindow from './components/layout/SoloWindow/solowindow';
 import ChessPuzzles from './components/layout/ChessPuzzle/chessPuzzle';
-
+import Debut from './components/layout/Debut/debut';
 export default function App() {
   const [currentView, setCurrentView] = useState('mainMenu'); 
 
@@ -42,7 +42,7 @@ export default function App() {
       )}
       
       {currentView === 'openings' && (
-        <div>Компонент дебютов (заглушка)</div>
+        <Debut onBack={handleBackToMenu}/>
       )}
     </div>
   );

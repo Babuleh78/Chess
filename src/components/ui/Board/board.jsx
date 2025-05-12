@@ -16,12 +16,13 @@ export default function Board( {onBack}) {
     }
   };
   
-  const [pieces, setPieces] = useState([]);
+  const [pieces, setPieces] = useState(initFigures()); // Фигуры
   const [selectedCell, setSelectedCell] = useState(null); // Выбранная клетка
   const [possibleMoves, setPossibleMoves] = useState([]); // Возможные ходы
   const [currentPlayer, setCurrentPlayer] = useState("white"); // Текущий игрок
   const [kingInCheck, setKingInCheck] = useState(null); // Есть ли Шах королю
   const [rotateBoard, setRotateBoard] = useState(true); // Нужно ли поворачивать доску
+  const [fonActive, setFonActive] = useState(true);
 
   const [whiteTime, setWhiteTime] = useState(600); // Время для белых
   const [blackTime, setBlackTime] = useState(600); // Время для черных
@@ -31,6 +32,7 @@ export default function Board( {onBack}) {
   const [promotingPawn, setPromotingPawn] = useState(null); // Отслеживаем пешку
   const [capturedPieces, setCapturedPieces] = useState({ white: [], black: [] }); // "Убитые" фигуры
   const [materialAdvantage, setMaterialAdvantage] = useState(0); // Подсчет преимущества
+  
   
   
 const handleResign = () => {
@@ -522,7 +524,7 @@ function calculatePossibleMoves(row, col, piece) {
     
 return (
   <>
-  <div className="board-background"></div>
+  <div className={fonActive ? "board-background active" : "board-background"}></div>
   <div className="board-container">
     <div className="left-panel">
       <div className="timers">
@@ -543,6 +545,14 @@ return (
         >
           <b>{rotateBoard ? "Отключить поворот" : "Включить поворот"}</b>
         </button>
+
+        <button 
+          onClick={() => setFonActive(!fonActive)}
+          className="rotate-button"
+        >
+          <b>{fonActive ? "Отключить фон" : "Включить Фон"}</b>
+        </button>
+
         {!gameOver && (
           <button 
             onClick={handleResign}
