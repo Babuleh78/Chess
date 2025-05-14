@@ -31,6 +31,17 @@ npm start
 
 ## 📸 Скриншоты
 
+Главное меню
+![image](https://github.com/user-attachments/assets/f49cb558-aa4a-4b19-9bff-c6193fd1c37f)
+
+Классическая игра
+![image](https://github.com/user-attachments/assets/ea97b19d-0107-49ae-83c3-e6cb7cea56fe)
+
+Решение задач
+![image](https://github.com/user-attachments/assets/df076806-9d8c-451a-97c1-06a2c1b08c53)
+
+Изучение дебютов
+![image](https://github.com/user-attachments/assets/f6e223b0-ceba-44f5-b44c-3c0e7bfa8aef)
 
 
 ## 📌 Особенности реализации
