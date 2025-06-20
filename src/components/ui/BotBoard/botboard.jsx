@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import { useState } from "react";
 import Cell from "../Cell/cell";
-import "./board.css";
 
-export default function Board( {onBack}) {
+
+export default function BotBoard( {onBack}) {
   const [board] = useState(
     Array(8).fill(null).map((_, row) => 
       Array(8).fill(null).map((_, col) => ({row,col,  color: (row + col) % 2 === 0 ? "white" : "black"}))
@@ -21,12 +21,9 @@ export default function Board( {onBack}) {
   const [possibleMoves, setPossibleMoves] = useState([]); // Возможные ходы
   const [currentPlayer, setCurrentPlayer] = useState("white"); // Текущий игрок
   const [kingInCheck, setKingInCheck] = useState(null); // Есть ли Шах королю
-  const [rotateBoard, setRotateBoard] = useState(true); // Нужно ли поворачивать доску
-  const [fonActive, setFonActive] = useState(true);
 
-  const [whiteTime, setWhiteTime] = useState(600); // Время для белых
-  const [blackTime, setBlackTime] = useState(600); // Время для черных
-  const [timerActive, setTimerActive] = useState(true); // Активен ли таймер
+  const [fonActive, setFonActive] = useState(true); // Активен ли анимированный фон
+
   const [gameOver, setGameOver] = useState(false); // Идет ли игра
   const [gameResult, setGameResult] = useState(null); // Белый черный или ничья
   const [promotingPawn, setPromotingPawn] = useState(null); // Отслеживаем пешку
@@ -39,37 +36,11 @@ const handleResign = () => {
   if (gameOver) return;
   setGameOver(true);
   setGameResult(currentPlayer === 'white' ? 'black' : 'white');
-  setTimerActive(false);
+ 
 };
 
-  useEffect(() => {
-    let interval;
-    if (timerActive && !gameOver) {
-      interval = setInterval(() => {
-        currentPlayer === 'white' 
-          ? setWhiteTime(prev => prev > 0 ? prev - 1 : 0)
-          : setBlackTime(prev => prev > 0 ? prev - 1 : 0);
-      }, 1000);
-    }
-    
-    if (whiteTime === 0) {
-      setGameOver(true);
-      setGameResult('black');
-      setTimerActive(false);
-    } else if (blackTime === 0) {
-      setGameOver(true);
-      setGameResult('white');
-      setTimerActive(false);
-    }
+ 
 
-      return () => clearInterval(interval);
-    }, [currentPlayer, timerActive, gameOver, whiteTime, blackTime]);
-
-function formatTime(seconds){
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-  };
 
   const handleCellClick = (row, col) => {
     if (selectedCell && selectedCell.row === row && selectedCell.col === col) {
@@ -146,7 +117,6 @@ function formatTime(seconds){
       if (isCheckmate) {
         setGameOver(true);
         setGameResult(currentPlayer);
-        setTimerActive(false);
       }
 
       setPieces(newPieces);
@@ -189,7 +159,6 @@ const handlePromotionChoice = (pieceType) => {
     if (isCheckmate) {
       setGameOver(true);
       setGameResult(currentPlayer);
-      setTimerActive(false);
     }
   } else {
     setKingInCheck(null);
@@ -529,24 +498,10 @@ return (
   <div className={fonActive ? "board-background active" : "board-background"}></div>
   <div className="board-container">
     <div className="left-panel">
-      <div className="timers">
-        <div className={`timer ${currentPlayer === 'black' ? 'active' : ''} ${whiteTime === 0 ? 'timeout' : ''}`}>
-          <div className="player-name">Белые</div>
-          <div className="time">{formatTime(whiteTime)}</div>
-        </div>
-        <div className={`timer ${currentPlayer === 'white' ? 'active' : ''} ${blackTime === 0 ? 'timeout' : ''}`}>
-          <div className="player-name">Чёрные</div>
-          <div className="time">{formatTime(blackTime)}</div>
-        </div>
-      </div>
+    
 
       <div className="controls">
-        <button 
-          onClick={() => setRotateBoard(!rotateBoard)}
-          className="rotate-button"
-        >
-          <b>{rotateBoard ? "Отключить поворот" : "Включить поворот"}</b>
-        </button>
+      
 
         <button 
           onClick={() => setFonActive(!fonActive)}
@@ -581,9 +536,7 @@ return (
           setGameOver(false);
           setGameResult(null);
           setCurrentPlayer('white');
-          setWhiteTime(600);
-          setBlackTime(600);
-          setTimerActive(true);
+         
           setKingInCheck(null);
             }}
             className="new-game-button"
@@ -596,14 +549,12 @@ return (
       </div>
     )}
 
-    <div className="board" style={{ transform: rotateBoard && currentPlayer === 'black' ? 'rotate(180deg)' : 'none' }}>
+    <div className="board" >
       {board.map((row, rowIndex) => (
         <div 
           key={rowIndex} 
           className="board-row" 
-          style={{ 
-            transform: rotateBoard && currentPlayer === 'black' ? 'rotate(180deg)' : 'none'
-          }}
+        
         >
           {row.map((cell, colIndex) => (
             <Cell
@@ -614,7 +565,7 @@ return (
               isPossibleMove={possibleMoves.some(move => move.row === rowIndex && move.col === colIndex)}
               isInCheck={kingInCheck && kingInCheck.row === rowIndex && kingInCheck.col === colIndex}
               onClick={() => handleCellClick(rowIndex, colIndex)}
-              isFlipped={rotateBoard && currentPlayer === 'black'}
+           
             />
           ))}
           
@@ -684,7 +635,7 @@ return (
                     <Cell
                       cell={{color: promotingPawn.color === 'white' ? 'white' : 'black'}}
                       piece={{type: pieceType, color: promotingPawn.color}}
-                      isFlipped={rotateBoard && currentPlayer === 'black'}
+                    
                     
                     />
                   </div>

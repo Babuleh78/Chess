@@ -39,7 +39,7 @@ const FloatingPieces = () => {
   );
 };
 
-export default function MainMenu({ onSinglePlayer, onChessPuzzles, onOpenings }) {
+export default function MainMenu({ onSinglePlayer, onChessPuzzles, onOpenings, onBot }) {
   return (
     <div className="menu-container">
       <FloatingPieces />
@@ -49,6 +49,10 @@ export default function MainMenu({ onSinglePlayer, onChessPuzzles, onOpenings })
             text="Играть" 
             onClick={onSinglePlayer}
             primary
+          />
+          <MenuButton 
+            text="Против компьютера" 
+            onClick={onBot}
           />
           <MenuButton 
             text="Шахматные задачи" 
