@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { use, useEffect } from "react";
 import { useState } from "react";
 import Cell from "../Cell/cell";
 
@@ -21,7 +21,6 @@ export default function BotBoard( {onBack}) {
   const [possibleMoves, setPossibleMoves] = useState([]); // Возможные ходы
   const [currentPlayer, setCurrentPlayer] = useState("white"); // Текущий игрок
   const [kingInCheck, setKingInCheck] = useState(null); // Есть ли Шах королю
-
   const [fonActive, setFonActive] = useState(true); // Активен ли анимированный фон
 
   const [gameOver, setGameOver] = useState(false); // Идет ли игра
@@ -29,7 +28,102 @@ export default function BotBoard( {onBack}) {
   const [promotingPawn, setPromotingPawn] = useState(null); // Отслеживаем пешку
   const [capturedPieces, setCapturedPieces] = useState({ white: [], black: [] }); // "Убитые" фигуры
   const [materialAdvantage, setMaterialAdvantage] = useState(0); // Подсчет преимущества
-  
+  const [gameInit, setGameInit] = useState(true); // Требует ли игра инициализации
+
+
+  useEffect(() => {
+    if(gameInit){
+      // Инициализация на сервере
+      fetch('http://localhost:8080/api/restart').then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+      })
+      .then(data => {
+        console.log('Успешный ответ:', data);
+      })
+      .catch(error => {
+        console.error('Ошибка запроса:', error);
+      });
+      
+      setGameInit(false)
+      }
+  }, [gameInit])
+
+ useEffect(() => {
+  if (currentPlayer === "black") {
+    const fetchBotMove = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/bot-move', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        
+        if (!response.ok) throw new Error('Ошибка сервера');
+        const data = await response.json();
+        console.log('Ответ сервера:', data);
+        const {fromY, fromX, toY, toX} = data;
+
+        const newPieces = [...pieces.map(row => [...row])];
+        const piece = newPieces[fromY][fromX];
+
+        // Обработка взятия фигуры (добавлено)
+        if (newPieces[toY][toX]) { 
+          const capturedPiece = newPieces[toY][toX];
+          setCapturedPieces(prev => {
+            const newCaptured = {
+              ...prev,
+              black: [...prev.black, capturedPiece] // Бот (черные) берет фигуру
+            };
+            
+            // Расчет материального преимущества (добавлено)
+            const pieceValues = {
+              pawn: 1, knight: 3, bishop: 3, 
+              rook: 5, queen: 9, king: 0
+            };
+            const whiteLost = newCaptured.white.reduce((s, p) => s + pieceValues[p.type], 0);
+            const blackLost = newCaptured.black.reduce((s, p) => s + pieceValues[p.type], 0);
+            setMaterialAdvantage(-blackLost + whiteLost);
+            
+            return newCaptured;
+          });
+        }
+
+        // Обычный ход
+        newPieces[toY][toX] = { ...piece, hasMoved: true };
+        newPieces[fromY][fromX] = null;
+
+        // Превращение пешки (добавлено)
+        if (piece.type === "pawn" && (toY === 0 || toY === 7)) {
+          setPromotingPawn({row: toY, col: toX, color: piece.color});
+        }
+
+        setPieces(newPieces);
+        const opponentColor = "white";
+        const kingPos = findKing(opponentColor, newPieces);
+        const isCheck = isSquareUnderAttack(kingPos.row, kingPos.col, newPieces, "black");
+        
+        if (isCheck) {
+          setKingInCheck(kingPos);
+        } else {
+          setKingInCheck(null);
+        }
+
+        const isCheckmate = checkForCheckmate(opponentColor, newPieces);
+        if (isCheckmate) {
+          setGameOver(true);
+          setGameResult("black");
+        }
+
+        setCurrentPlayer("white");
+      } catch (error) {
+        console.error('Ошибка при отправке хода:', error);
+      }
+    };
+
+    fetchBotMove();
+  }
+}, [currentPlayer, pieces]); // Добавлен pieces в зависимости
   
   
 const handleResign = () => {
@@ -42,9 +136,10 @@ const handleResign = () => {
  
 
 
-  const handleCellClick = (row, col) => {
-    if (selectedCell && selectedCell.row === row && selectedCell.col === col) {
-       console.log("1")
+  const handleCellClick = async (row, col) => {
+    if(currentPlayer === "black"){ return }
+    if (selectedCell && selectedCell.row === row && selectedCell.col === col ) {
+    
       setSelectedCell(null);
       setPossibleMoves([]);
       return;
@@ -122,9 +217,35 @@ const handleResign = () => {
       setPieces(newPieces);
       setSelectedCell(null);
       setPossibleMoves([]);
+
+
+
+      if(currentPlayer === "white"){
+        const convertToChessNotation = (row, col) => {
+          const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+          return `${letters[col]}${8 - row}`;
+        };
+
+        const from = convertToChessNotation(selectedCell.row, selectedCell.col); 
+        const to = convertToChessNotation(row, col); 
+        console.log(from, to)
+
+        try{
+          const response = await fetch('http://localhost:8080/api/player-move',{
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ from, to }), 
+          });
+           if (!response.ok) throw new Error('Ошибка сервера');
+        
+        } catch (error){
+          console.error('Ошибка при отправке хода:', error);
+
+      }
       setCurrentPlayer(opponentColor);
       return;
     }
+  }
 
     const piece = pieces[row][col];
     if (piece && piece.color === currentPlayer) {
@@ -195,6 +316,7 @@ function checkForCheckmate(color, pieces) {
       const piece = pieces[r][c];
       if (piece && piece.color === color) {
         const moves = getPossibleMovesForPiece(r, c, piece, pieces);
+        console.log(moves)
         for (const move of moves) {
           if (isMoveSafeForKing(r, c, move.row, move.col, pieces, color)) {
             return false; // Нашли допустимый ход - мата нет
@@ -446,17 +568,17 @@ function getPossibleMovesForPiece(row, col, piece, pieces) {
       }
       
       // Длинная рокировка (влево)
-      if (pieces[row][0] && pieces[row][0].type === "rook" && !pieces[row][0].hasMoved) {
-        // Проверяем, что клетки между королем и ладьей свободны
-        if (!pieces[row][1] && !pieces[row][2] && !pieces[row][3]) {
-          // Проверяем, что король не под шахом и не проходит через атакованные клетки
-          if (!isSquareUnderAttack(row, col, pieces, piece.color === "white" ? "black" : "white") &&
-              !isSquareUnderAttack(row, 2, pieces, piece.color === "white" ? "black" : "white") &&
-              !isSquareUnderAttack(row, 3, pieces, piece.color === "white" ? "black" : "white")) {
-            moves.push({ row: row, col: 2, isCastling: true, rookCol: 0, newRookCol: 3 });
-          }
-        }
-      }
+      // if (pieces[row][0] && pieces[row][0].type === "rook" && !pieces[row][0].hasMoved) {
+      //   // Проверяем, что клетки между королем и ладьей свободны
+      //   if (!pieces[row][1] && !pieces[row][2] && !pieces[row][3]) {
+      //     // Проверяем, что король не под шахом и не проходит через атакованные клетки
+      //     if (!isSquareUnderAttack(row, col, pieces, piece.color === "white" ? "black" : "white") &&
+      //         !isSquareUnderAttack(row, 2, pieces, piece.color === "white" ? "black" : "white") &&
+      //         !isSquareUnderAttack(row, 3, pieces, piece.color === "white" ? "black" : "white")) {
+      //       moves.push({ row: row, col: 2, isCastling: true, rookCol: 0, newRookCol: 3 });
+      //     }
+      //   }
+      //}
     }
   }
 
@@ -484,7 +606,8 @@ function findKing(color, pieces) {
 
 function calculatePossibleMoves(row, col, piece) {
     const moves = getPossibleMovesForPiece(row, col, piece, pieces);
-
+    
+    console.log(moves)
     const safeMoves = moves.filter(move => {
         return isMoveSafeForKing(row, col, move.row, move.col, pieces, piece.color);
     });
@@ -665,6 +788,7 @@ return (
 
 
 function initFigures() {
+  // Инициализация на доске
   const cells = Array(8).fill(null).map(()=> Array(8).fill(null));
 
   for (let i = 0; i < 8; i++) {
@@ -691,6 +815,8 @@ function initFigures() {
   cells[7][3] = { type: "queen", color: "white", hasMoved: false };
   cells[7][5] = { type: "bishop", color: "white", hasMoved: false };
   cells[7][6] = { type: "knight", color: "white", hasMoved: false };
+
   
   return cells;
+
 }
